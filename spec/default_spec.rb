@@ -165,6 +165,14 @@ describe 'rabbitmq::default' do
         '{ciphers,[{ecdhe_ecdsa,aes_128_cbc,sha256},{ecdhe_ecdsa,aes_256_cbc,sha}]}')
     end
 
+    it 'allows ssl ciphers and versions' do
+      node.normal['rabbitmq']['ssl'] = true
+      node.normal['rabbitmq']['ssl_ciphers'] = ['{ecdhe_ecdsa,aes_128_cbc,sha256}', '{ecdhe_ecdsa,aes_256_cbc,sha}']
+      node.normal['rabbitmq']['ssl_versions'] = ['tlsv1.2']
+      expect(chef_run).to render_file('/etc/rabbitmq/rabbitmq.config').with_content(
+        /,{versions,\['tlsv1\.2'\]}\n.*,{ciphers,\[{ecdhe_ecdsa,aes_128_cbc,sha256},{ecdhe_ecdsa,aes_256_cbc,sha}\]}/)
+    end
+
     it 'allows web console ssl ciphers' do
       node.normal['rabbitmq']['web_console_ssl'] = true
       node.normal['rabbitmq']['ssl_ciphers'] = ['"ECDHE-ECDSA-AES256-SHA384"', '"ECDH-ECDSA-AES256-SHA384"']
