@@ -1,5 +1,7 @@
 driver:
   name: <%= ENV['KI_DRIVER'] || 'vagrant' %>
+  synced_folders:
+    - ["test/sslcerts/", "/sslcerts"]
 
 verifier:
   name: inspec
@@ -8,11 +10,13 @@ provisioner:
   name: chef_zero
   product_name: chef
   install_strategy: always
+  product_version: 12.10.24
 
 platforms:
   - name: centos-6.9
   - name: centos-7.4
   - name: ubuntu-16.04
+  - name: ubuntu-14.04
   - name: debian-9
 
 suites:
@@ -150,3 +154,26 @@ suites:
       inspec_tests:
         - test/smoke/default
     excludes: ["centos-6.9", "centos-7.4", "debian-9"]
+
+  - name: default-deb-ssl
+    run_list:
+      - recipe[apt]
+      - recipe[erlang@6.2.0]
+      - recipe[rabbitmq::default]
+    attributes:
+      erlang:
+        install_method: "esl"
+        esl:
+          version: "1:21.*"
+      rabbitmq:
+        version: "3.7.9"
+        ssl: true
+        ssl_cacert: "/sslcerts/ca_certficate.pem"
+        ssl_cert: "/sslcerts/server_certificate.pem"
+        ssl_key: "/sslcerts/server_key.pem"
+        ssl_ciphers: '{rsa,aes_256_cbc,sha256}'
+        ssl_versions: "tlsv1.2"
+    verifier:
+      inspec_tests:
+        - test/smoke/ssl
+    excludes: ["centos-6.9", "centos-7.4"]
